@@ -1,0 +1,9 @@
+# Ignore Intellij artefacts
+.idea
+venv
+
+# Ignore python artefacts
+__pycache__
+
+# Ignore private config file until appropriate to add with blank spaces.
+config.py
