@@ -15,4 +15,13 @@
 from src.twitterator import Twitterator
 from src.database_wrapper import DatabaseWrapper
 
+
+# Get Database Connection.
 db = DatabaseWrapper()
+
+# Get Twitter iterator, to populate our database.
+tw_iter = iter(Twitterator())
+
+# At each iteration in the loop. We add the tweets to our database.
+for tweets in tw_iter:
+    db.insert_many_records(tweets)

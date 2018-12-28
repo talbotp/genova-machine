@@ -19,6 +19,7 @@ class DatabaseWrapper:
 
     def __init__(self):
         self.connection = get_connected_db()
+        self.table_name = 'twitter_' + config.RUNTIME_CONFIG['twitter-handle']
         self.create_table()
 
     def __del__(self):
@@ -27,34 +28,79 @@ class DatabaseWrapper:
     # Create table if not there.
     def create_table(self):
         db_name = config.DATABASE_CONFIG['database']
-        handle = config.RUNTIME_CONFIG['twitter-handle']
 
         # First check if the table exists.
         sql_query = '''
-                SELECT table_name
-                FROM information_schema.tables
-                WHERE table_schema = '{}'
-                    AND table_name LIKE '%{}%';
-                '''.format(db_name, handle)
-        print(sql_query)
+                    SELECT table_name
+                    FROM information_schema.tables
+                    WHERE table_schema = '{}'
+                        AND table_name LIKE '%{}%';
+        '''.format(db_name, self.table_name)
 
         db_cursor = self.connection.cursor(buffered=True)
 
-        print(db_cursor.execute(sql_query))
-
         if db_cursor.execute(sql_query) is None:
             sql_create = '''
-                    CREATE TABLE {} (
-                        id_str              VARCHAR(100) PRIMARY KEY,
-                        datetime_created    DATETIME,
-                        text                VARCHAR(282)
-                    )
-                    '''.format(handle)
-            print(sql_create)
+                        CREATE TABLE {} (
+                            id_str              VARCHAR(100) PRIMARY KEY,
+                            datetime_created    DATETIME,
+                            text                VARCHAR(282)
+                        );
+            '''.format(self.table_name)
 
             db_cursor.execute(sql_create)
 
         db_cursor.close()
+        return None
+
+    # Insert a single Record into our Twitter table.
+    def insert_record(self, id_string, date_time, tweet_text):
+        sql_insert = '''
+                    INSERT INTO {} (
+                        id_str,
+                        datetime_created,
+                        text)
+                    VALUES (
+                        %s,
+                        %s,
+                        %s
+                    );
+        '''.format(self.table_name)
+        val = (id_string, date_time, tweet_text)
+
+        cursor = self.connection.cursor()
+        cursor.execute(sql_insert, val)
+
+        self.connection.commit()
+        cursor.close()
+        return None
+
+    # Insert a List of records in a more efficient way than using insert_record
+    # list is a list of tweets as returned by the tweepy API.
+    def insert_many_records(self, list):
+        sql_insert = '''
+                    INSERT INTO {} (
+                        id_str,
+                        datetime_created,
+                        text)
+                    VALUES (
+                        %s,
+                        %s,
+                        %s
+                    );
+        '''.format(self.table_name)
+        val = []
+        for tweet in list:
+            print(tweet.text.encode('utf-8'))
+            val.append(
+                (tweet.id_str, tweet.created_at, tweet.text.encode('utf-8'))
+            )
+
+        cursor = self.connection.cursor()
+        cursor.executemany(sql_insert, val)
+
+        self.connection.commit()
+        cursor.close()
         return None
 
 
@@ -75,18 +121,18 @@ def get_connected_db():
 
     db_cursor = db.cursor()
     db_name = config.DATABASE_CONFIG['database']
-    mySQL_use = '''
-            USE {};
-            '''.format(db_name)
+    mysql_use = '''
+                USE {};
+    '''.format(db_name)
 
     try:
-        db_cursor.execute(mySQL_use)
+        db_cursor.execute(mysql_use)
     except mysql.connector.errors.ProgrammingError:
-        mySQL_create = '''
-                CREATE DATABASE {};
-                '''.format(db_name)
-        db_cursor.execute(mySQL_create)
-        db_cursor.execute(mySQL_use)
+        mysql_create = '''
+                        CREATE DATABASE {};
+        '''.format(db_name)
+        db_cursor.execute(mysql_create)
+        db_cursor.execute(mysql_use)
     finally:
         db_cursor.close()
 
