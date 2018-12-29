@@ -31,6 +31,8 @@ class Twitterator:
         if self.first is True:
             new_tweets = self.api.user_timeline(screen_name=self.handle,
                                                 count=self.size)
+            # No longer on first iteration so we set to False.
+            self.first = False
         else:
             new_tweets = self.api.user_timeline(screen_name=self.handle,
                                                 count=self.size,

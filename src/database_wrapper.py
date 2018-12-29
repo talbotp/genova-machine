@@ -30,7 +30,7 @@ class DatabaseWrapper:
         db_name = config.DATABASE_CONFIG['database']
 
         # First check if the table exists.
-        sql_query = '''
+        sql_check = '''
                     SELECT table_name
                     FROM information_schema.tables
                     WHERE table_schema = '{}'
@@ -39,7 +39,10 @@ class DatabaseWrapper:
 
         db_cursor = self.connection.cursor(buffered=True)
 
-        if db_cursor.execute(sql_query) is None:
+        db_cursor.execute(sql_check)
+
+        # If table doesn't exist then we create it.
+        if len(db_cursor.fetchall()) == 0:
             sql_create = '''
                         CREATE TABLE {} (
                             id_str              VARCHAR(100) PRIMARY KEY,
@@ -56,7 +59,7 @@ class DatabaseWrapper:
     # Insert a single Record into our Twitter table.
     def insert_record(self, id_string, date_time, tweet_text):
         sql_insert = '''
-                    INSERT INTO {} (
+                    INSERT IGNORE INTO {} (
                         id_str,
                         datetime_created,
                         text)
@@ -71,6 +74,7 @@ class DatabaseWrapper:
         cursor = self.connection.cursor()
         cursor.execute(sql_insert, val)
 
+        # Commit the insertion and close cursor.
         self.connection.commit()
         cursor.close()
         return None
@@ -79,7 +83,7 @@ class DatabaseWrapper:
     # list is a list of tweets as returned by the tweepy API.
     def insert_many_records(self, list):
         sql_insert = '''
-                    INSERT INTO {} (
+                    INSERT OR IGNORE INTO {} (
                         id_str,
                         datetime_created,
                         text)
@@ -89,9 +93,11 @@ class DatabaseWrapper:
                         %s
                     );
         '''.format(self.table_name)
+
         val = []
+
         for tweet in list:
-            print(tweet.text.encode('utf-8'))
+            # print('{} : {}'.format(tweet.id_str, tweet.text.encode('utf-8')))
             val.append(
                 (tweet.id_str, tweet.created_at, tweet.text.encode('utf-8'))
             )

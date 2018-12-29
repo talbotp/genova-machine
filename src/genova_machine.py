@@ -24,4 +24,6 @@ tw_iter = iter(Twitterator())
 
 # At each iteration in the loop. We add the tweets to our database.
 for tweets in tw_iter:
+    for tweet in tweets:
+        print(tweet.text.encode('utf-8'))
     db.insert_many_records(tweets)
