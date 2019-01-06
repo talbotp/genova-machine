@@ -20,8 +20,17 @@ from src import config
 
 class Twitterator:
 
+    # This constructor is not necessary for our program to run correctly.
+    # However, we do this for readability so we know all of the fields.
+    def __init__(self):
+        self.api        = None
+        self.first      = None      # First iteration is treated differently.
+        self.handle     = None
+        self.size       = None
+
+    # Actually initialize all variables here, only when the iterator is needed.
     def __iter__(self):
-        self.api = get_api()
+        self.set_api()
         self.first = True
         self.handle = config.RUNTIME_CONFIG['twitter-handle']
         self.size = config.RUNTIME_CONFIG['tweets-per-iter']
@@ -31,6 +40,7 @@ class Twitterator:
         if self.first is True:
             new_tweets = self.api.user_timeline(screen_name=self.handle,
                                                 count=self.size)
+
             # No longer on first iteration so we set to False.
             self.first = False
         else:
@@ -46,11 +56,11 @@ class Twitterator:
 
         return new_tweets
 
-
-# Set the API using the Tweepy and OAuth given by a Twitter Apps
-def get_api():
-    auth = tweepy.OAuthHandler(config.TWITTER_API_CONFIG['key'],
-                               config.TWITTER_API_CONFIG['key-secret'])
-    auth.set_access_token(config.TWITTER_API_CONFIG['access-token'],
-                          config.TWITTER_API_CONFIG['access-token-secret'])
-    return tweepy.API(auth)
+    # Set the API using the Tweepy and OAuth given by a Twitter Apps
+    def set_api(self):
+        auth = tweepy.OAuthHandler(config.TWITTER_API_CONFIG['key'],
+                                   config.TWITTER_API_CONFIG['key-secret'])
+        auth.set_access_token(config.TWITTER_API_CONFIG['access-token'],
+                              config.TWITTER_API_CONFIG['access-token-secret'])
+        self.api = tweepy.API(auth)
+        return None

@@ -1,13 +1,22 @@
 # genova-machine #
 
-Here, we will perform LSTM on the most recent 3200 tweets from a single user (3200 is max set by Twitter API), in order to generate text with a high similarity to the data provided.
+Here, we create a tool that can be used to scrape the last 3200 tweets created 
+by a single user, which will then be stored in a MySQL database. We will then 
+perform machine learning techniques to generate tweets that have a high
+similarity score to those in the database.
 
-## Idea ## 
+## Usage ##
 
-We will scrape users Instagram and Twitter and store their posts and captions in a database.
-We will then perform LSTM methods on this data to generate new tweets.
+The file which is used to drive this program is genova_machine.py. In order for 
+this to run correctly, you must follow the instructions in config.py to set up 
+your local MySQL database credentials and Twitter API OAuth and Access Tokens.
 
-## Technologies ##
+We must run the following:
 
-* MySQL -> I havn't touched databases in a while so this could be useful for me.
-* tweepy -> Python Twitter API https://github.com/tweepy/tweepy
+    pip3 install mysql-connector
+    
+    pip3 install tweepy
+
+Finally, we run the driver for the program using the following.
+
+    python3 genova_machine.py
